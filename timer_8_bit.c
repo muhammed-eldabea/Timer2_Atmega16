@@ -23,12 +23,14 @@
  *=============================================================================*/
 
 /*a global pointer to function used in timer2 ISR callBack*/
-volatile void (*ptrFunc)(Void) = Null ;
+static volatile void (*ptrFunc)(Void) = Null ;
+
+/*******************************************************************************
+ *                       Interrupt Service Routines                            *
+ *******************************************************************************/
 
 
-/*=============================================================================
- * 							Function Definition
- *=============================================================================*/
+
 
 ISR(TIMER2_COMP_vect)
 {
@@ -43,6 +45,8 @@ ISR(TIMER2_COMP_vect)
 		(*ptrFunc)() ;
 	}
 }
+
+
 
 
 ISR (TIMER2_OVF_vect)
@@ -63,6 +67,12 @@ ISR (TIMER2_OVF_vect)
 
 
 
+
+/*=============================================================================
+ * 							Function Definition
+ *=============================================================================*/
+
+
 void Timer2_init(Timer2_Configuration *ptrStruct )
 {
 
@@ -80,7 +90,7 @@ void Timer2_init(Timer2_Configuration *ptrStruct )
 
 	============================================================================*/
 
-	if (ptrStruct->Async_enable == 1 ){
+	if (ptrStruct->Async_enable == Asynch_clockSource ){
 
 		ASSR |= (1<<3) ; /*set Asynchronous Timer/Counter2 */
 		/* To switch to asynchronous operation: Wait for TCN2UB, OCR2UB, and
@@ -92,11 +102,11 @@ void Timer2_init(Timer2_Configuration *ptrStruct )
 
 	}
 
-	TCCR2 = (TCCR2 & 0xfc) | (ptrStruct->Frequency_prescaler  & 0x03) ; /*CLK*/
-	TCCR2 = (TCCR2 & 0xf8) | ((ptrStruct->Wave_generation_mode & 0x01)<<3) ;/*WGM21*/
-	TCCR2 = (TCCR2 & 0x4f) | ((ptrStruct->Wave_generation_mode & 0x02)<<5) ;/*WGM22*/
-	TCCR2 = (TCCR2 & 0x3f) | ((ptrStruct->Compare_output_mode & 0x03)<<4) ; /*COM*/
-
+	TCCR2 = (TCCR2 & 0xf8) | (ptrStruct->Frequency_prescaler  & 0x07) ; /*CLK*/
+	TCCR2 = (TCCR2 & 0xBf) | ((ptrStruct->Wave_generation_mode & 0x01)<<6) ;/*WGM20*/
+	TCCR2 = (TCCR2 & 0xf7) | ((ptrStruct->Wave_generation_mode & 0x02)<<2) ;/*WGM21*/
+	TCCR2 = (TCCR2 & 0xCf) | ((ptrStruct->Compare_output_mode & 0x03)<<4) ; /*COM*/
+	
 	if(ptrStruct->Wave_generation_mode != PWM_PhaseCoorect_mode)
 	{
 		TCCR2 |= (1<<7) ; /*enable FOC2*/
@@ -104,6 +114,7 @@ void Timer2_init(Timer2_Configuration *ptrStruct )
 
 
 #if Interrupt_enable ==1
+	SREG |= (1<<7) ;
 	switch (ptrStruct->Wave_generation_mode)
 	{
 	case Normal_mode :
@@ -118,6 +129,8 @@ void Timer2_init(Timer2_Configuration *ptrStruct )
 
 #endif
 
+	TCNT2 = 0 ;
+	OCR2 = 0 ;
 
 }
 
@@ -184,7 +197,7 @@ void Timer2_Setinitail_Value(uint8 value)
 
 
 
-void Timer2_callBach(void(*ptr)(void))
+void Timer2_callBack(void(*ptr)(void))
 {
 
 	/*=========================================================================
@@ -194,7 +207,7 @@ void Timer2_callBach(void(*ptr)(void))
      ==========================================================================*/
 
 
-	ptrFunc =(volatile)ptr ;
+	ptrFunc =ptr ;
 }
 
 

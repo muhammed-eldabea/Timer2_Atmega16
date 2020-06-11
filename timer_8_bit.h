@@ -31,8 +31,10 @@
 
 typedef unsigned char uint8   ;
 
-#define Interrupt_enable    0
-#define Null                (void*)0
+#define Interrupt_enable    1
+#define Null  ((void*)0)
+
+
 
 typedef enum {
 	/*wave generation mode of the timer
@@ -59,7 +61,7 @@ typedef enum {
 	/*select the frequency prescaler */
 	NO_Clock_source,FrqBY_0_NoPrescaler,FrqBY_8_Prescaler,FrqBY_32_Prescaler,
 	FrqBY_64_Prescaler,FrqBY_128_Prescaler,FrqBY_256_Prescaler,
-	FrqBY_1025_Prescaler
+	FrqBY_1024_Prescaler
 
 
 }Clock_presclaer;
@@ -97,12 +99,13 @@ typedef struct
 /*-------------------------> Function Declarations <----------------------------*/
 
 
-
-
-
-
-
-
+void Timer2_init(Timer2_Configuration *ptrStruct ) ;
+void Timer2_OVF_Polling() ;
+void Timer2_CTC_Polling() ;
+void Timer2Clear () ;
+void Timer2_SetCompareValue(uint8 value) ;
+void Timer2_Setinitail_Value(uint8 value) ;
+void Timer2_callBack(void(*ptr)(void)) ;
 
 
 #endif /* TIMER_8_BIT_H_ */
